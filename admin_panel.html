@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Panel Admin — SG-SST</title>
+<style>
+  :root{
+    --bg:#0a0f18;--surface:#111827;--panel:#1a2535;--panel2:#1e2d42;
+    --line:#2a3a52;--text:#e8f0ff;--muted:#7a90a4;
+    --amber:#f5a623;--blue:#5ba3d9;--green:#52b788;--red:#e05050;
+    --radius:10px;--mono:'Courier New',monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:24px;}
+  
+  .header{background:linear-gradient(135deg,#1a2942,#0d1e2e);border:1px solid var(--line);border-radius:var(--radius);padding:20px 28px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+  .header-title{font-size:20px;font-weight:800;color:var(--blue);}
+  .header-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+  .badge{background:#1a3a5a;border:1px solid var(--blue);color:var(--blue);font-size:11px;padding:4px 10px;border-radius:20px;font-family:var(--mono);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+  @media(max-width:700px){.grid{grid-template-columns:1fr;}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;}
+  .card-title{font-size:14px;font-weight:700;color:var(--amber);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;font-size:11px;font-family:var(--mono);text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+  .form-group input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;}
+  .form-group input:focus{border-color:var(--blue);}
+
+  .btn{padding:9px 18px;border-radius:7px;border:1px solid var(--line);cursor:pointer;font-size:13px;font-weight:600;transition:.15s;}
+  .btn-primary{background:var(--blue);border-color:var(--blue);color:#fff;}
+  .btn-primary:hover{opacity:.85;}
+  .btn-success{background:#1a4028;border-color:var(--green);color:var(--green);}
+  .btn-success:hover{opacity:.85;}
+  .btn-danger{background:#2a0808;border-color:var(--red);color:var(--red);font-size:11px;padding:5px 10px;}
+  .btn-sm{font-size:11px;padding:5px 12px;}
+
+  .msg{padding:10px 14px;border-radius:7px;font-size:12px;margin-top:10px;display:none;}
+  .msg-ok{background:#0a1e0a;border:1px solid #1a4028;color:var(--green);}
+  .msg-err{background:#1a0808;border:1px solid #4a1818;color:var(--red);}
+
+  .empresa-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;}
+  .empresa-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;align-items:center;gap:12px;}
+  .empresa-card:hover{border-color:var(--amber);}
+  .empresa-info{flex:1;}
+  .empresa-nombre{font-size:14px;font-weight:700;color:var(--text);}
+  .empresa-clave{font-size:11px;font-family:var(--mono);color:var(--blue);margin-top:2px;}
+  .empresa-fecha{font-size:10px;color:var(--muted);margin-top:2px;}
+  .empresa-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+  .token-section{background:var(--panel2);border:1px solid var(--amber);border-radius:8px;padding:12px 14px;margin-bottom:16px;}
+  .token-label{font-size:10px;font-family:var(--mono);color:var(--amber);margin-bottom:6px;text-transform:uppercase;}
+  .token-input{display:flex;gap:8px;}
+  .token-input input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:8px 12px;color:var(--text);font-size:13px;font-family:var(--mono);outline:none;}
+
+  .empty{text-align:center;padding:40px;color:var(--muted);font-style:italic;font-size:13px;}
+  
+  .stats{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 20px;flex:1;min-width:120px;}
+  .stat-num{font-size:28px;font-weight:800;color:var(--blue);}
+  .stat-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .download-section{background:var(--panel);border:1px solid var(--green);border-radius:8px;padding:14px;margin-top:10px;display:none;}
+  .download-section p{font-size:12px;color:var(--muted);margin-bottom:10px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header-title">Panel de Administración — SG-SST</div>
+    <div class="header-sub">Gestión de empresas clientes · Herramienta de Investigación de Accidentes</div>
+  </div>
+  <span class="badge" id="statusBadge">Conectando...</span>
+</div>
+
+<!-- Token -->
+<div class="token-section">
+  <div class="token-label">Token de administrador</div>
+  <div class="token-input">
+    <input type="password" id="adminToken" placeholder="Ingresa el token de administrador..." value="">
+    <button class="btn btn-primary" onclick="conectar()">Conectar</button>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats" id="statsSection" style="display:none">
+  <div class="stat"><div class="stat-num" id="statEmpresas">0</div><div class="stat-lbl">Empresas activas</div></div>
+  <div class="stat"><div class="stat-num" id="statInv">—</div><div class="stat-lbl">Investigaciones totales</div></div>
+</div>
+
+<div class="grid">
+  <!-- Crear empresa -->
+  <div class="card">
+    <div class="card-title">➕ Nueva empresa cliente</div>
+    <div class="form-group">
+      <label>Nombre de la empresa</label>
+      <input type="text" id="newNombre" placeholder="Ej: Minera del Norte S.A.S.">
+    </div>
+    <div class="form-group">
+      <label>Clave secreta (la empresa no la ve)</label>
+      <input type="text" id="newClave" placeholder="Ej: minera-norte-2026">
+      <div style="font-size:10px;color:var(--muted);margin-top:4px">Sin espacios. Esta clave va embebida en el HTML que le entregas al cliente.</div>
+    </div>
+    <div class="form-group">
+      <label>Logo de la empresa (opcional)</label>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="logoPreviewBox" style="width:80px;height:60px;border:1px dashed #2a3a52;border-radius:6px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:#0a0f18;flex-shrink:0" onclick="document.getElementById('logoFileInput').click()">
+          <img id="logoPreviewImg" style="display:none;max-width:78px;max-height:58px;border-radius:4px;object-fit:contain">
+          <span id="logoPreviewPlaceholder" style="font-size:10px;color:#7a90a4;text-align:center">Clic para<br>cargar logo</span>
+        </div>
+        <div style="flex:1">
+          <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="handleLogoUpload(event)">
+          <div style="font-size:11px;color:var(--muted);line-height:1.5">PNG o JPG recomendado. El logo quedara embebido dentro del HTML que se genera para el cliente.</div>
+          <button id="btnRemoveLogo" onclick="removeLogo()" style="display:none;margin-top:6px;background:#2a0808;border:1px solid var(--red);color:var(--red);border-radius:5px;padding:3px 10px;cursor:pointer;font-size:11px">✕ Quitar logo</button>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="crearEmpresa()" style="width:100%">Crear empresa</button>
+    <div class="msg msg-ok" id="msgCrear"></div>
+    <div class="msg msg-err" id="msgCrearErr"></div>
+
+    <div class="download-section" id="downloadSection">
+      <p>✓ Empresa creada. Descarga el HTML configurado para este cliente:</p>
+      <button class="btn btn-success" id="btnDescargar" onclick="descargarHTML()" style="width:100%">⬇ Descargar HTML para este cliente</button>
+    </div>
+  </div>
+
+  <!-- Lista empresas -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center">
+      <span>🏢 Empresas registradas</span>
+      <button class="btn btn-sm" style="font-size:10px;padding:4px 10px" onclick="cargarEmpresas()">↻ Actualizar</button>
+    </div>
+    <div class="empresa-list" id="empresaList">
+      <div class="empty">Conecta primero para ver las empresas</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = 'https://api-sgsst-production.up.railway.app';
+let adminToken = '';
+let empresaRecienCreada = null;
+
+// HTML base URL para descargar
+const HTML_BASE_URL = 'https://garo782.github.io/Analisis---Evento/analisis_evento_con_historial.html';
+
+async function conectar(){
+  adminToken = document.getElementById('adminToken').value.trim();
+  if(!adminToken){ alert('Ingresa el token'); return; }
+  
+  try{
+    const res = await fetch(API_URL + '/admin/empresas', {
+      headers: { 'x-admin-token': adminToken }
+    });
+    if(!res.ok) throw new Error('Token invalido');
+    const data = await res.json();
+    
+    document.getElementById('statusBadge').textContent = '✓ Conectado';
+    document.getElementById('statusBadge').style.cssText = 'background:#0a1e0a;border:1px solid #1a4028;color:#52b788;font-size:11px;padding:4px 10px;border-radius:20px;font-family:var(--mono)';
+    document.getElementById('statsSection').style.display = 'flex';
+    document.getElementById('statEmpresas').textContent = data.empresas.length;
+    
+    renderEmpresas(data.empresas);
+  } catch(e){
+    document.getElementById('statusBadge').textContent = '✗ Error';
+    document.getElementById('statusBadge').style.color = 'var(--red)';
+    alert('No se pudo conectar: ' + e.message);
+  }
+}
+
+function renderEmpresas(empresas){
+  const list = document.getElementById('empresaList');
+  if(!empresas.length){
+    list.innerHTML = '<div class="empty">No hay empresas registradas aún</div>';
+    return;
+  }
+  list.innerHTML = empresas.map(e => `
+    <div class="empresa-card">
+      <div class="empresa-info">
+        <div class="empresa-nombre">${e.nombre}</div>
+        <div class="empresa-clave">🔑 ${e.clave}</div>
+        <div class="empresa-fecha">Creada: ${e.creada ? e.creada.slice(0,10) : '—'}</div>
+      </div>
+      <div class="empresa-actions">
+        <button class="btn btn-success btn-sm" onclick="descargarHTMLEmpresa('${e.nombre}','${e.clave}',null)">⬇ HTML</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function cargarEmpresas(){
+  if(!adminToken){ alert('Conecta primero'); return; }
+  const res = await fetch(API_URL + '/admin/empresas', {
+    headers:{'x-admin-token': adminToken}
+  });
+  const data = await res.json();
+  document.getElementById('statEmpresas').textContent = data.empresas.length;
+  renderEmpresas(data.empresas);
+}
+
+async function crearEmpresa(){
+  const nombre = document.getElementById('newNombre').value.trim();
+  const clave  = document.getElementById('newClave').value.trim();
+  const msgOk  = document.getElementById('msgCrear');
+  const msgErr = document.getElementById('msgCrearErr');
+  msgOk.style.display='none'; msgErr.style.display='none';
+
+  if(!nombre||!clave){ msgErr.textContent='Nombre y clave son obligatorios'; msgErr.style.display='block'; return; }
+  if(!adminToken){ msgErr.textContent='Conecta primero'; msgErr.style.display='block'; return; }
+  if(clave.includes(' ')){ msgErr.textContent='La clave no puede tener espacios'; msgErr.style.display='block'; return; }
+
+  try{
+    const res = await fetch(API_URL + '/admin/empresa', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-admin-token':adminToken},
+      body: JSON.stringify({nombre, clave})
+    });
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    empresaRecienCreada = {nombre, clave};
+    msgOk.textContent = `✓ Empresa "${nombre}" creada con clave "${clave}"`;
+    msgOk.style.display='block';
+    document.getElementById('downloadSection').style.display='block';
+    document.getElementById('newNombre').value='';
+    document.getElementById('newClave').value='';
+    cargarEmpresas();
+  } catch(e){
+    msgErr.textContent = 'Error: ' + e.message;
+    msgErr.style.display='block';
+  }
+}
+
+async function descargarHTML(){
+  if(!empresaRecienCreada) return;
+  await descargarHTMLEmpresa(empresaRecienCreada.nombre, empresaRecienCreada.clave, logoBase64);
+  document.getElementById('downloadSection').style.display='none';
+  removeLogo();
+}
+
+async function descargarHTMLEmpresa(nombre, clave, logo){
+  try{
+    // Fetch the base HTML
+    const res = await fetch(HTML_BASE_URL);
+    let html = await res.text();
+
+    // Replace the empresa clave
+    html = html.replace(
+      /const EMPRESA_CLAVE = '[^']*';/,
+      `const EMPRESA_CLAVE = '${clave}';`
+    );
+
+    // 2. Embed company name
+    html = html.replace(
+      "const name=localStorage.getItem('analisis_evento_company')||'';",
+      "const name=localStorage.getItem('analisis_evento_company')||'" + "'+nombre+'" + "';"
+    );
+
+    // 3. Embed logo if provided
+    if(logo){
+      html = html.replace(
+        "const logo=localStorage.getItem('analisis_evento_logo')||'';",
+        "const logo=localStorage.getItem('analisis_evento_logo')||'" + "'+logo+'" + "';"
+      );
+    }
+
+    // Download
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const nombreArchivo = nombre.toLowerCase().replace(/[^a-z0-9]/g,'-').replace(/-+/g,'-');
+    a.href=url; a.download=`analisis_evento_${nombreArchivo}.html`;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  } catch(e){
+    alert('Error al descargar: ' + e.message);
+  }
+}
+
+// Logo handling
+var logoBase64 = null;
+
+function handleLogoUpload(event){
+  var file = event.target.files[0];
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e){
+    logoBase64 = e.target.result;
+    document.getElementById('logoPreviewImg').src = logoBase64;
+    document.getElementById('logoPreviewImg').style.display = 'block';
+    document.getElementById('logoPreviewPlaceholder').style.display = 'none';
+    document.getElementById('btnRemoveLogo').style.display = 'inline-block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(){
+  logoBase64 = null;
+  document.getElementById('logoFileInput').value = '';
+  document.getElementById('logoPreviewImg').style.display = 'none';
+  document.getElementById('logoPreviewPlaceholder').style.display = 'block';
+  document.getElementById('btnRemoveLogo').style.display = 'none';
+}
+
+// Auto-generar clave desde el nombre
+document.getElementById('newNombre').addEventListener('input', function(){
+  const clave = this.value.toLowerCase()
+    .replace(/[áàä]/g,'a').replace(/[éèë]/g,'e').replace(/[íìï]/g,'i')
+    .replace(/[óòö]/g,'o').replace(/[úùü]/g,'u').replace(/ñ/g,'n')
+    .replace(/[^a-z0-9\s]/g,'').trim()
+    .replace(/\s+/g,'-')
+    .slice(0,30);
+  document.getElementById('newClave').value = clave + '-' + new Date().getFullYear();
+});
+</script>
+</body>
+</html>
